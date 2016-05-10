@@ -18,25 +18,27 @@ class Topic extends Base
      * Result(JSON):
      * - forum_id - (integer)
      * - total_replies - (integer)
-     * @param \Slim\Http\Request $request
+     * @param \Slim\Http\Request  $request
      * @param \Slim\Http\Response $response
-     * @param string[] $args
+     * @param string[]            $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      */
     public function info($request, $response, $args)
     {
-        $db = $this->phpBB->get_db();
-        $secret = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret($params['secret']) ? $params['secret'] : null;
+        $db       = $this->phpBB->get_db();
+        $secret   = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret(
+            $params['secret']
+        ) ? $params['secret'] : null;
         $topic_id = !empty($args['topicId']) ? $args['topicId'] : null;
         if ($topic_id == null) {
             throw new \phpBBJson\Exception\InternalError("The topic you selected does not exist.");
         }
-        $sql = "SELECT topic_posts_approved, forum_id FROM " . TOPICS_TABLE . " WHERE topic_id = {$topic_id}";
+        $sql    = "SELECT topic_posts_approved, forum_id FROM " . TOPICS_TABLE . " WHERE topic_id = {$topic_id}";
         $result = $db->sql_query($sql);
-        $row = $db->sql_fetchrow($result);
-        $info = array(
-            'forum_id' => $row['forum_id'],
+        $row    = $db->sql_fetchrow($result);
+        $info   = array(
+            'forum_id'      => $row['forum_id'],
             'total_replies' => $row['topic_posts_approved']
         );
         return $response->withJson($info);
@@ -44,9 +46,9 @@ class Topic extends Base
 
     /**
      * List all posts in a topic, sorted chronologically (oldest first).
-     * @param \Slim\Http\Request $request
+     * @param \Slim\Http\Request  $request
      * @param \Slim\Http\Response $response
-     * @param string[] $args
+     * @param string[]            $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      */
@@ -54,10 +56,10 @@ class Topic extends Base
     {
         define('PHPBB_USE_BOARD_URL_PATH', true);
 
-        $db = $this->phpBB->get_db();
-        $user = $this->phpBB->get_user();
-        $auth = $this->phpBB->get_auth();
-        $config = $this->phpBB->get_config();
+        $db              = $this->phpBB->get_db();
+        $user            = $this->phpBB->get_user();
+        $auth            = $this->phpBB->get_auth();
+        $config          = $this->phpBB->get_config();
         $phpbb_container = $this->phpBB->get_container();
         /** @var \phpbb\feed\helper $phpbb_feed_helper */
         $phpbb_feed_helper = $phpbb_container->get('feed.helper');
@@ -96,39 +98,41 @@ class Topic extends Base
             $olderThan = '';
         }
 
-        $secret = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret($params['secret']) ? $params['secret'] : null;
+        $secret  = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret(
+            $params['secret']
+        ) ? $params['secret'] : null;
         $user_id = null;
         if ($secret != null) {
-            $user_id = \phpBBJson\apiHelpers::getIdFromSecret($secret);
+            $user_id  = \phpBBJson\apiHelpers::getIdFromSecret($secret);
             $userdata = \phpBBJson\apiHelpers::userdata($user_id);
         } else {
             $user->session_begin();
             $userdata = $user->data;
-            $user_id = $userdata['user_id'];
+            $user_id  = $userdata['user_id'];
         }
         $user->setup('viewtopic');
         $auth->acl($userdata);
 
         // get forum id and topic title
-        $obj = $db->sql_fetchrow(
+        $obj         = $db->sql_fetchrow(
             $db->sql_query("SELECT forum_id, topic_title FROM " . TOPICS_TABLE . " WHERE topic_id = " . $topic_id)
         );
-        $forum_id = $obj['forum_id'];
+        $forum_id    = $obj['forum_id'];
         $topic_title = $obj['topic_title'];
 
         // get forum title
-        $obj = $db->sql_fetchrow(
+        $obj         = $db->sql_fetchrow(
             $db->sql_query("SELECT forum_name FROM " . FORUMS_TABLE . " WHERE forum_id = " . $forum_id)
         );
         $forum_title = $obj['forum_name'];
 
-        $sql = "
+        $sql        = "
         	SELECT COUNT(*) AS posts_count
         	FROM " . POSTS_TABLE . "
         	WHERE topic_id = " . $topic_id . " AND post_visibility = 1 {$olderThan}
         ";
-        $result = $db->sql_query($sql);
-        $row = $db->sql_fetchrow($result);
+        $result     = $db->sql_query($sql);
+        $row        = $db->sql_fetchrow($result);
         $postsCount = $row['posts_count'];
 
         // get topic posts
@@ -152,11 +156,11 @@ class Topic extends Base
         	{$limit}
         ";
 
-        $query = $db->sql_query($sql);
+        $query   = $db->sql_query($sql);
         $results = array(
-            'forum_id' => $forum_id,
-            'forum_name' => $forum_title,
-            'topic_id' => $topic_id,
+            'forum_id'    => $forum_id,
+            'forum_name'  => $forum_title,
+            'topic_id'    => $topic_id,
             'topic_title' => $topic_title,
             'posts_count' => $postsCount
         );
@@ -167,22 +171,28 @@ class Topic extends Base
                 $options = ($row['enable_bbcode'] ? OPTION_FLAG_BBCODE : 0) + ($row['enable_smilies'] ? OPTION_FLAG_SMILIES : 0) + ($row['enable_smilies'] ? OPTION_FLAG_LINKS : 0);
             }
             $phpbb_avatar_manager = $phpbb_container->get('avatar.manager');
-            $driver = $phpbb_avatar_manager->get_driver($row['avatar_type'], true);
-            if ($driver)
-            {
+            $driver               = $phpbb_avatar_manager->get_driver($row['avatar_type'], true);
+            if ($driver) {
                 $avatar_data = $driver->get_data($row);
-            }
-            else
-            {
+            } else {
                 $avatar_data['src'] = '';
             }
             $results['posts'][] = array(
-                'post_id' => $row['post_id'],
-                'author_id' => $row['user_id'],
+                'post_id'         => $row['post_id'],
+                'author_id'       => $row['user_id'],
                 'author_username' => $row['username'],
-                'author_avatar' => $avatar_data,
-                'timestamp' => $row['post_time'],
-                'post_text' => censor_text($phpbb_feed_helper->generate_content($row['post_text'], $row['bbcode_uid'], $row['bbcode_bitfield'], $options, $forum_id, [])),
+                'author_avatar'   => $avatar_data,
+                'timestamp'       => $row['post_time'],
+                'post_text'       => censor_text(
+                    $phpbb_feed_helper->generate_content(
+                        $row['post_text'],
+                        $row['bbcode_uid'],
+                        $row['bbcode_bitfield'],
+                        $options,
+                        $forum_id,
+                        []
+                    )
+                ),
             );
         }
 
@@ -191,15 +201,15 @@ class Topic extends Base
 
     /**
      * Get the currently authenticated user's permissions. User must be authenticated.
-     * @param \Slim\Http\Request $request
+     * @param \Slim\Http\Request  $request
      * @param \Slim\Http\Response $response
-     * @param string[] $args
+     * @param string[]            $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      */
     public function permissions($request, $response, $args)
     {
-        $db = $this->phpBB->get_db();
+        $db   = $this->phpBB->get_db();
         $user = $this->phpBB->get_user();
         $auth = $this->phpBB->get_auth();
 
@@ -208,10 +218,12 @@ class Topic extends Base
             throw new \phpBBJson\Exception\InternalError("The topic you selected does not exist.");
         }
 
-        $secret = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret($params['secret']) ? $params['secret'] : null;
+        $secret  = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret(
+            $params['secret']
+        ) ? $params['secret'] : null;
         $user_id = null;
         if ($secret != null) {
-            $user_id = \phpBBJson\apiHelpers::getIdFromSecret($secret);
+            $user_id  = \phpBBJson\apiHelpers::getIdFromSecret($secret);
             $userdata = \phpBBJson\apiHelpers::userdata($user_id);
         } else {
             $user->session_begin();
@@ -219,15 +231,15 @@ class Topic extends Base
         }
         $auth->acl($userdata);
 
-        $obj = $db->sql_fetchrow(
+        $obj      = $db->sql_fetchrow(
             $db->sql_query("SELECT forum_id FROM " . TOPICS_TABLE . " WHERE topic_id = " . $topic_id)
         );
         $forum_id = $obj['forum_id'];
 
         $permissions = array(
-            'can_see' => ($auth->acl_get('f_list', $forum_id)) ? true : false,
-            'can_read' => ($auth->acl_get('f_read', $forum_id)) ? true : false,
-            'can_post' => ($auth->acl_get('f_post', $forum_id)) ? true : false,
+            'can_see'   => ($auth->acl_get('f_list', $forum_id)) ? true : false,
+            'can_read'  => ($auth->acl_get('f_read', $forum_id)) ? true : false,
+            'can_post'  => ($auth->acl_get('f_post', $forum_id)) ? true : false,
             'can_reply' => ($auth->acl_get('f_reply', $forum_id)) ? true : false
         );
 
@@ -236,9 +248,9 @@ class Topic extends Base
 
     /**
      * Post a reply to a topic. User must be authenticated
-     * @param \Slim\Http\Request $request
+     * @param \Slim\Http\Request  $request
      * @param \Slim\Http\Response $response
-     * @param string[] $args
+     * @param string[]            $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      * @throws \phpBBJson\Exception\Unauthorized
@@ -249,24 +261,26 @@ class Topic extends Base
         include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
         include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
 
-        $db = $this->phpBB->get_db();
-        $user = $this->phpBB->get_user();
-        $auth = $this->phpBB->get_auth();
+        $db     = $this->phpBB->get_db();
+        $user   = $this->phpBB->get_user();
+        $auth   = $this->phpBB->get_auth();
         $config = $this->phpBB->get_config();
 
         $topic_id = !empty($args['topicId']) ? $args['topicId'] : null;
         if ($topic_id == null) {
             throw new \phpBBJson\Exception\InternalError("The topic you selected does not exist.");
         }
-        $obj = $db->sql_fetchrow(
+        $obj      = $db->sql_fetchrow(
             $db->sql_query("SELECT forum_id, topic_title FROM " . TOPICS_TABLE . " WHERE topic_id = " . $topic_id)
         );
         $forum_id = $obj['forum_id'];
 
-        $secret = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret($params['secret']) ? $params['secret'] : null;
+        $secret  = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret(
+            $params['secret']
+        ) ? $params['secret'] : null;
         $user_id = null;
         if ($secret != null) {
-            $user_id = \phpBBJson\apiHelpers::getIdFromSecret($secret);
+            $user_id  = \phpBBJson\apiHelpers::getIdFromSecret($secret);
             $userdata = \phpBBJson\apiHelpers::userdata($user_id);
             $auth->acl($userdata);
             $user->session_begin();
@@ -278,65 +292,65 @@ class Topic extends Base
         }
 
         if ($auth->acl_get('f_reply', $forum_id)) {
-            $uid = $bitfield = $flags = '';
+            $uid     = $bitfield = $flags = '';
             $message = $request->getParam('topic_body');
             $subject = "Re: " . $obj['topic_title'];
             generate_text_for_storage($message, $uid, $bitfield, $flags, true, true, true);
 
             $data = array(
                 // General Posting Settings
-                'forum_id' => $forum_id,
+                'forum_id'                  => $forum_id,
                 // The forum ID in which the post will be placed. (int)
-                'topic_id' => $topic_id,
+                'topic_id'                  => $topic_id,
                 // Post a new topic or in an existing one? Set to 0 to create a new one, if not, specify your topic ID here instead.
-                'icon_id' => false,
+                'icon_id'                   => false,
                 // The Icon ID in which the post will be displayed with on the viewforum, set to false for icon_id. (int)
                 // Defining Post Options
-                'enable_bbcode' => true,
+                'enable_bbcode'             => true,
                 // Enable BBcode in this post. (bool)
-                'enable_smilies' => true,
+                'enable_smilies'            => true,
                 // Enabe smilies in this post. (bool)
-                'enable_urls' => true,
+                'enable_urls'               => true,
                 // Enable self-parsing URL links in this post. (bool)
-                'enable_sig' => true,
+                'enable_sig'                => true,
                 // Enable the signature of the poster to be displayed in the post. (bool)
                 // Message Body
-                'message' => $message,
+                'message'                   => $message,
                 // Your text you wish to have submitted. It should pass through generate_text_for_storage() before this. (string)
-                'message_md5' => md5($message),
+                'message_md5'               => md5($message),
                 // The md5 hash of your message
                 // Values from generate_text_for_storage()
-                'bbcode_bitfield' => $bitfield,
+                'bbcode_bitfield'           => $bitfield,
                 // Value created from the generate_text_for_storage() function.
-                'bbcode_uid' => $uid,
+                'bbcode_uid'                => $uid,
                 // Value created from the generate_text_for_storage() function.
                 // Other Options
-                'post_edit_locked' => 0,
+                'post_edit_locked'          => 0,
                 // Disallow post editing? 1 = Yes, 0 = No
-                'topic_title' => $subject,
+                'topic_title'               => $subject,
                 // Subject/Title of the topic. (string)
                 // Email Notification Settings
-                'notify_set' => false,
+                'notify_set'                => false,
                 // (bool)
-                'notify' => false,
+                'notify'                    => false,
                 // (bool)
-                'post_time' => 0,
+                'post_time'                 => 0,
                 // Set a specific time, use 0 to let submit_post() take care of getting the proper time (int)
-                'forum_name' => '',
+                'forum_name'                => '',
                 // For identifying the name of the forum in a notification email. (string)
                 // Indexing
-                'enable_indexing' => true,
+                'enable_indexing'           => true,
                 // Allow indexing the post? (bool)
                 // 3.0.6
-                'force_approved_state' => true,
+                'force_approved_state'      => true,
                 // Allow the post to be submitted without going into unapproved queue
                 // 3.1-dev, overwrites force_approve_state
-                'force_visibility' => true,
+                'force_visibility'          => true,
                 // Allow the post to be submitted without going into unapproved queue, or make it be deleted
                 'topic_first_poster_colour' => $userdata['user_colour']
             );
 
-            $poll = array();
+            $poll   = array();
             $result = submit_post('reply', $subject, $userdata['username'], POST_NORMAL, $poll, $data);
             preg_match("/p=\d(.*?)\b/", $result, $matches);
             $post_id = explode('=', $matches[0]);

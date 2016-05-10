@@ -12,9 +12,9 @@ namespace phpBBJson\Modules;
 class Service extends Base
 {
     /**
-     * @param \Slim\Http\Request $request
+     * @param \Slim\Http\Request  $request
      * @param \Slim\Http\Response $response
-     * @param string[] $args
+     * @param string[]            $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      */
@@ -24,9 +24,9 @@ class Service extends Base
     }
 
     /**
-     * @param \Slim\Http\Request $request
+     * @param \Slim\Http\Request  $request
      * @param \Slim\Http\Response $response
-     * @param string[] $args
+     * @param string[]            $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      */
@@ -36,9 +36,9 @@ class Service extends Base
     }
 
     /**
-     * @param \Slim\Http\Request $request
+     * @param \Slim\Http\Request  $request
      * @param \Slim\Http\Response $response
-     * @param string[] $args
+     * @param string[]            $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      */
