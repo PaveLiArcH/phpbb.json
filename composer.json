@@ -1,12 +1,15 @@
 {
   "require": {
-    "slim/slim": "3.0.0-RC1",
+    "slim/slim": "3.0.0",
     "symfony/psr-http-message-bridge": "*",
     "zendframework/zend-diactoros": "*"
   },
   "autoload": {
     "psr-4": {
-      "phpBBJson\\": "includes/"
+      "phpBBJson\\": "api/includes/"
     }
+  },
+  "config": {
+    "vendor-dir": "api/vendor"
   }
 }

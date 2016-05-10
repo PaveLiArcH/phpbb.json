@@ -18,7 +18,9 @@ require_once '../vendor/autoload.php';
 use phpBBJson\Modules\Authentication;
 use phpBBJson\Modules\Board;
 use phpBBJson\Modules\Forum;
+use phpBBJson\Modules\Service;
 use phpBBJson\Modules\Topic;
+use phpBBJson\Modules\User;
 use Slim\Http\Uri;
 use Symfony\Bridge\PsrHttpMessage\Factory\DiactorosFactory;
 
@@ -30,7 +32,10 @@ include('bootstrap.php');
 // Create and configure Slim app
 $app = new \Slim\App(
 	[
-		'request' => (new DiactorosFactory())->createRequest($symfony_request)->withUri(
+		'settings' => [
+			'displayErrorDetails' => true,
+		],
+		'request' => \phpBBJson\apiHelpers::adaptRequest((new DiactorosFactory())->createRequest($symfony_request)->withUri(
 			new Uri(
 				$symfony_request->getScheme(),
 				$symfony_request->getHost(),
@@ -38,7 +43,7 @@ $app = new \Slim\App(
 				$symfony_request->getPathInfo(),
 				$symfony_request->getQueryString()
 			)
-		)
+		))
 	]
 );
 
@@ -47,6 +52,8 @@ $app->group(Board::getGroup(), (new Board($phpbb))->constructRoutes());
 $app->group(Forum::getGroup(), (new Forum($phpbb))->constructRoutes());
 $app->group(Topic::getGroup(), (new Topic($phpbb))->constructRoutes());
 $app->group(Authentication::getGroup(), (new Authentication($phpbb))->constructRoutes());
+$app->group(Service::getGroup(), (new Service($phpbb))->constructRoutes());
+$app->group(User::getGroup(), (new User($phpbb))->constructRoutes());
 
 // Run app
 $app->run();

@@ -9,4 +9,4 @@ include_once('constants.php');
 // Setup phpBB
 include_once('bootstrap_phpbb.php');
 
-//include(INCLUDES_DIR . 'functions.php');
+//include(INCLUDES_DIR . 'helpers.php');

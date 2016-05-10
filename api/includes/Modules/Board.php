@@ -32,7 +32,7 @@ class Board extends Base
 	public function boardList($request, $response, $args)
 	{
 		$params = $request->getQueryParams();
-		$secret = isset($params['secret']) && \phpBBJson\verifySecret($params['secret']) ? $params['secret'] : null;
+		$secret = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret($params['secret']) ? $params['secret'] : null;
 
 		$parent_id = isset($args['parentId']) ? $args['parentId'] : null;
 
@@ -59,7 +59,7 @@ class Board extends Base
 		$user    = $this->phpBB->get_user();
 		$user_id = null;
 		if ($secret != null) {
-			$user_id                  = \phpBBJson\getIdFromSecret($secret);
+			$user_id                  = \phpBBJson\apiHelpers::getIdFromSecret($secret);
 			$sql_array['LEFT_JOIN'][] = array(
 				'FROM' => array(
 					FORUMS_TRACK_TABLE => 'ft'
@@ -67,7 +67,7 @@ class Board extends Base
 				'ON'   => 'ft.user_id = ' . $user_id . ' AND ft.forum_id = f.forum_id'
 			);
 			$sql_array['SELECT'] .= ', ft.mark_time';
-			$userdata = \phpBBJson\userdata($user_id);
+			$userdata = \phpBBJson\apiHelpers::userdata($user_id);
 
 		} else {
 			$user->session_begin();
@@ -129,6 +129,26 @@ class Board extends Base
 	}
 
 	/**
+	 * @param \Slim\Http\Request $request
+	 * @param \Slim\Http\Response $response
+	 * @param string[] $args
+	 * @return \Slim\Http\Response
+	 * @throws \phpBBJson\Exception\InternalError
+	 * @throws \phpBBJson\Exception\Unauthorized
+	 * Result(JSON): topic_id - (integer) The ID of the newly created topic
+	 */
+	public function syncForum($request, $response, $args)
+	{
+		global $phpEx, $phpbb_root_path;
+		include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+		include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+		sync('forum');
+		sync('topic');
+		return $response->withJson(['sync' => 'ok']);
+	}
+
+	/**
 	 * @return \Closure
 	 */
 	public function constructRoutes()
@@ -138,6 +158,7 @@ class Board extends Base
 			/** @var \Slim\App $this */
 			$this->get('/forums/{parentId}', [$self, 'boardList']);
 			$this->get('/forums', [$self, 'boardList']);
+			$this->get('/sync', [$self, 'syncForum']);
 		};
 	}
 
