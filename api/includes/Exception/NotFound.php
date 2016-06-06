@@ -1,6 +1,6 @@
 <?php
 /**
- * Handles exceptions relating to unimplemented errors (HTTP Error 501)
+ * Handles errors relating to nonexistent content (HTTP Error 404)
  *
  * @package    phpbb.json
  * @subpackage exceptions
@@ -12,7 +12,7 @@ namespace phpBBJson\Exception;
 
 use Symfony\Component\HttpFoundation\Response;
 
-class Unimplemented extends GenericException
+class NotFound extends GenericException
 {
     /**
      * Generate a proper response (and include the error code in the 'error' field) and quit
@@ -23,6 +23,6 @@ class Unimplemented extends GenericException
      */
     public function __construct($message = '', $code = 0, \Exception $previous = null)
     {
-        $this->generate_response(Response::HTTP_NOT_IMPLEMENTED, $message);
+        $this->generate_response(Response::HTTP_NOT_FOUND, $message);
     }
 }

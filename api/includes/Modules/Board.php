@@ -23,28 +23,23 @@ class Board extends Base
      * </ul>
      *
      * <b>Result</b>: A two-dimensional JSON array is returned.
-     * @param \Slim\Http\Request  $request
+     * @param \Slim\Http\Request $request
      * @param \Slim\Http\Response $response
-     * @param string[]            $args
+     * @param string[] $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      */
     public function boardList($request, $response, $args)
     {
-        $params = $request->getQueryParams();
-        $secret = isset($params['secret']) && \phpBBJson\apiHelpers::verifySecret(
-            $params['secret']
-        ) ? $params['secret'] : null;
-
-        $parent_id = isset($args['parentId']) ? $args['parentId'] : null;
+        $parent_id = isset($args['parentId']) ? intval($args['parentId']) : null;
 
         if ($parent_id == '' || empty($parent_id)) {
             $parent_id = 0;
         }
 
         $sql_array = [
-            'SELECT'    => 'f.*',
-            'FROM'      => [
+            'SELECT' => 'f.*',
+            'FROM' => [
                 FORUMS_TABLE => 'f'
             ],
             'LEFT_JOIN' => array(),
@@ -56,35 +51,17 @@ class Board extends Base
             $sql_where = 'parent_id = ' . $parent_id;
         }
 
-        $db      = $this->phpBB->get_db();
-        $auth    = $this->phpBB->get_auth();
-        $user    = $this->phpBB->get_user();
-        $user_id = null;
-        if ($secret != null) {
-            $user_id                  = \phpBBJson\apiHelpers::getIdFromSecret($secret);
-            $sql_array['LEFT_JOIN'][] = array(
-                'FROM' => array(
-                    FORUMS_TRACK_TABLE => 'ft'
-                ),
-                'ON'   => 'ft.user_id = ' . $user_id . ' AND ft.forum_id = f.forum_id'
-            );
-            $sql_array['SELECT'] .= ', ft.mark_time';
-            $userdata = \phpBBJson\apiHelpers::userdata($user_id);
-
-        } else {
-            $user->session_begin();
-            $userdata = $user->data;
-        }
-        $auth->acl($userdata);
+        $db = $this->phpBB->get_db();
+        $auth = $this->phpBB->get_auth();
 
         $sql = $db->sql_build_query(
             'SELECT',
-            array(
-                'SELECT'    => $sql_array['SELECT'],
-                'FROM'      => $sql_array['FROM'],
+            [
+                'SELECT' => $sql_array['SELECT'],
+                'FROM' => $sql_array['FROM'],
                 'LEFT_JOIN' => $sql_array['LEFT_JOIN'],
-                'WHERE'     => $sql_where
-            )
+                'WHERE' => $sql_where
+            ]
         );
 
         $result = $db->sql_query($sql);
@@ -114,26 +91,26 @@ class Board extends Base
             }
 
             $forums[] = array(
-                'forum_id'             => $row['forum_id'],
-                'parent_id'            => $row['parent_id'],
-                'forum_name'           => $row['forum_name'],
-                'unread'               => ($row['mark_time'] == null) ? true : false,
-                'total_topics'         => $row['forum_topics'],
-                'total_posts'          => $row['forum_posts'],
-                'last_poster_id'       => $row['forum_last_poster_id'],
-                'last_poster_name'     => $row['forum_last_poster_name'],
-                'last_post_topic_id'   => $row['forum_last_post_id'],
+                'forum_id' => $row['forum_id'],
+                'parent_id' => $row['parent_id'],
+                'forum_name' => $row['forum_name'],
+                'unread' => ($row['mark_time'] == null) ? true : false,
+                'total_topics' => $row['forum_topics'],
+                'total_posts' => $row['forum_posts'],
+                'last_poster_id' => $row['forum_last_poster_id'],
+                'last_poster_name' => $row['forum_last_poster_name'],
+                'last_post_topic_id' => $row['forum_last_post_id'],
                 'last_post_topic_name' => $row['forum_last_post_subject'],
-                'last_post_time'       => $row['forum_last_post_time']
+                'last_post_time' => $row['forum_last_post_time']
             );
         }
         return $response->withJson($forums);
     }
 
     /**
-     * @param \Slim\Http\Request  $request
+     * @param \Slim\Http\Request $request
      * @param \Slim\Http\Response $response
-     * @param string[]            $args
+     * @param string[] $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\InternalError
      * @throws \phpBBJson\Exception\Unauthorized
@@ -141,10 +118,8 @@ class Board extends Base
      */
     public function syncForum($request, $response, $args)
     {
-        global $phpEx, $phpbb_root_path;
-        include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
-        include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
-        include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+        global $phpbb_root_path;
+        include_once($phpbb_root_path . 'includes/functions_admin.php');
         sync('forum');
         sync('topic');
         return $response->withJson(['sync' => 'ok']);

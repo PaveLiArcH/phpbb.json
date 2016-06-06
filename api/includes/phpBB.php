@@ -17,6 +17,7 @@ class phpBB
     private $user;
     private $config;
     private $container;
+    private $cache;
 
     /**
      * @param \phpbb\db\driver\factory $db
@@ -91,4 +92,22 @@ class phpBB
     {
         $this->container = $container;
     }
+
+    /**
+     * @return \phpbb\cache\driver\driver_interface
+     */
+    public function get_cache()
+    {
+        return $this->cache;
+    }
+
+    /**
+     * @param \phpbb\cache\driver\driver_interface $cache
+     */
+    public function set_cache($cache)
+    {
+        $this->cache = $cache;
+    }
+
+
 }

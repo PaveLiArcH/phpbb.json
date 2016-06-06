@@ -10,17 +10,19 @@
 
 namespace phpBBJson\Exception;
 
+use Symfony\Component\HttpFoundation\Response;
+
 class BadFormat extends GenericException
 {
     /**
      * Generate a proper response (and include the error code in the 'error' field) and quit
      *
-     * @param string     $message  Error message
-     * @param int        $code     Error code
+     * @param string $message Error message
+     * @param int $code Error code
      * @param \Exception $previous Previous unhandled exception
      */
     public function __construct($message = '', $code = 0, \Exception $previous = null)
     {
-        $this->generate_response(HTTP_BAD_FORMAT, $message);
+        $this->generate_response(Response::HTTP_BAD_REQUEST, $message);
     }
 }

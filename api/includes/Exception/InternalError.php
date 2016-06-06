@@ -10,17 +10,19 @@
 
 namespace phpBBJson\Exception;
 
+use Symfony\Component\HttpFoundation\Response;
+
 class InternalError extends GenericException
 {
     /**
      * Generate a proper response (and include the error code in the 'error' field) and quit
      *
-     * @param string     $message  Error message
-     * @param int        $code     Error code
+     * @param string $message Error message
+     * @param int $code Error code
      * @param \Exception $previous Previous unhandled exception
      */
     public function __construct($message = '', $code = 0, \Exception $previous = null)
     {
-        $this->generate_response(HTTP_INTERNAL_ERROR, $message);
+        $this->generate_response(Response::HTTP_INTERNAL_SERVER_ERROR, $message);
     }
 }

@@ -11,16 +11,16 @@ namespace phpBBJson\Modules;
 class Authentication extends Base
 {
     /**
-     * @param \Slim\Http\Request  $request
+     * @param \Slim\Http\Request $request
      * @param \Slim\Http\Response $response
-     * @param string[]            $args
+     * @param string[] $args
      * @return \Slim\Http\Response
      * @throws \phpBBJson\Exception\Unauthorized
      */
     public function login($request, $response, $args)
     {
         $auth = $this->phpBB->get_auth();
-        $db   = $this->phpBB->get_db();
+        $db = $this->phpBB->get_db();
 
         $username = $request->getParam('username');
         $password = $request->getParam('password');
@@ -38,9 +38,9 @@ class Authentication extends Base
             //echo $secret;
             $user_row = $result['user_row'];
             //print_r($user_row);
-            $sql    = "SELECT COUNT(*) AS num_count FROM " . API_SECRET . " WHERE secret = '{$secret}'";
+            $sql = "SELECT COUNT(*) AS num_count FROM " . API_SECRET . " WHERE secret = '{$secret}'";
             $result = $db->sql_query($sql);
-            $count  = (int)$db->sql_fetchfield('num_count');
+            $count = (int)$db->sql_fetchfield('num_count');
             if ($count == 0) {
                 $db->sql_query(
                     "INSERT INTO " . API_SECRET . " (`secret`, `user_id`) VALUES ('" . $secret . "', '" . $user_row['user_id'] . "')"
@@ -53,17 +53,17 @@ class Authentication extends Base
     }
 
     /**
-     * @param \Slim\Http\Request  $request
+     * @param \Slim\Http\Request $request
      * @param \Slim\Http\Response $response
-     * @param string[]            $args
+     * @param string[] $args
      * @return \Slim\Http\Response
      */
     public function logout($request, $response, $args)
     {
-        $db     = $this->phpBB->get_db();
+        $db = $this->phpBB->get_db();
         $secret = $request->getParam('secret');
         $result = $db->sql_query("SELECT COUNT(*) AS num_count FROM " . API_SECRET . " WHERE secret = '{$secret}'");
-        $count  = (int)$db->sql_fetchfield('num_count');
+        $count = (int)$db->sql_fetchfield('num_count');
         if ($count > 0) {
             $db->sql_query("DELETE FROM " . API_SECRET . " WHERE secret = '{$secret}'");
         }
@@ -79,11 +79,11 @@ class Authentication extends Base
      * This implementation of PBKDF2 was originally created by defuse.ca
      * With improvements by variations-of-shadow.com
      *
-     * @param string  $algorithm  - The hash algorithm to use. Recommended: SHA256
-     * @param string  $password   - The password.
-     * @param string  $salt       - A salt that is unique to the password.
-     * @param int     $count      - Iteration count. Higher is better, but slower. Recommended: At least 1024.
-     * @param int     $key_length - The length of the derived key in bytes.
+     * @param string $algorithm - The hash algorithm to use. Recommended: SHA256
+     * @param string $password - The password.
+     * @param string $salt - A salt that is unique to the password.
+     * @param int $count - Iteration count. Higher is better, but slower. Recommended: At least 1024.
+     * @param int $key_length - The length of the derived key in bytes.
      * @param boolean $raw_output - If true, the key is returned in raw binary format. Hex encoded otherwise.
      * @return string A $key_length-byte key derived from the password and salt.
      */

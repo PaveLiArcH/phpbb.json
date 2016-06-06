@@ -12,24 +12,25 @@ namespace phpBBJson\Exception;
 
 class GenericException extends \Exception
 {
+    protected $status;
+
     /**
      * Generate a response and quit.
      *
-     * @param string $header  HTTP header to output
+     * @param string $status HTTP status to output
      * @param string $message Error message to output
      */
-    protected function generate_response($header, $message)
+    protected function generate_response($status, $message)
     {
-        /*$response = new \phpBBJson\Response();
-        $response->set_header(HTTP_BAD_FORMAT);
-        $response->set_data(array('error', $message));
-        
-        $response->response();
-        
-        // Throw away any stored response
-        while (ob_get_level() > 1)
-        {
-            ob_end_clean();
-        }*/
+        $this->status = $status;
+        $this->message = $message;
+    }
+
+    /**
+     * @param $response \Slim\Http\Response
+     * @return \Slim\Http\Response
+     */
+    public function respond($response) {
+        return $response->withJson(['error' => $this->message], $this->status);
     }
 }
