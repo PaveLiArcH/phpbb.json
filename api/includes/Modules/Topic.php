@@ -662,6 +662,59 @@ class Topic extends Base
     }
 
     /**
+     * Removes a topic. You must be authenticated.
+     * Data:
+     * - secret (string) - The authentication code
+     * - forum_id (integer)
+     * - topic_title (string)
+     * - topic_body (string)
+     * @param \Slim\Http\Request $request
+     * @param \Slim\Http\Response $response
+     * @param string[] $args
+     * @return \Slim\Http\Response
+     * @throws InternalError
+     * @throws Unauthorized
+     * Result(JSON): topic_id - (integer) The ID of the newly created forum
+     */
+    public function removeTopic($request, $response, $args)
+    {
+        global $phpbb_root_path;
+        //include_once($phpbb_root_path . 'includes/functions_posting.php');
+        //include_once($phpbb_root_path . 'includes/functions_admin.php');
+        //include_once($phpbb_root_path . 'includes/functions_acp.php');
+        include_once($phpbb_root_path . 'includes/functions_mcp.php');
+        //include_once($phpbb_root_path . 'includes/acp/acp_forums.php');
+
+        $user = $this->phpBB->get_user();
+        $auth = $this->phpBB->get_auth();
+        $cache = $this->phpBB->get_cache();
+
+        $topic_id = !empty($args['topicId']) ? intval($args['topicId']) : null;
+
+        $topic_ids = [$topic_id];
+
+        $data = phpbb_get_topic_data($topic_ids);
+
+        if (count($data) != 1) {
+            throw new InternalError("Incorrect number of removing topics: " . count($data));
+        }
+
+        $row = reset($data);
+        $topic_id = key($data);
+
+        if (!$auth->acl_get('a_forumdel', $row['forum_id']) && !$auth->acl_get('m_softdelete', $row['forum_id'])) {
+            throw new Unauthorized("You are not authorised to delete this topic.");
+        }
+
+        $phpbb_container = $this->phpBB->get_container();
+        /* @var $phpbb_content_visibility \phpbb\content_visibility */
+        $phpbb_content_visibility = $phpbb_container->get('content.visibility');
+        $return = $phpbb_content_visibility->set_topic_visibility(ITEM_DELETED, $topic_id, $row['forum_id'], $user->data['user_id'], time(), "deleted by forum api");
+
+        return $response->withJson($return);
+    }
+
+    /**
      * @return \Closure
      */
     public function constructRoutes()
@@ -677,6 +730,7 @@ class Topic extends Base
             $this->post('/{topicId}/posts', [$self, 'reply']);
             $this->post('/{forumId}', [$self, 'newTopic']);
             $this->put('/{topicId}', [$self, 'updateTopic']);
+            $this->delete('/{topicId}', [$self, 'removeTopic']);
         };
     }
 
