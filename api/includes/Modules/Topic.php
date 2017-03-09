@@ -185,7 +185,7 @@ class Topic extends Base
             );
         }
 
-        return $response->withJson($results);
+        return $response->withJson($results, 200, JSON_UNESCAPED_UNICODE);
     }
 
     /**
