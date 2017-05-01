@@ -105,6 +105,9 @@ class Topic extends Base
         $obj = $db->sql_fetchrow(
             $db->sql_query("SELECT forum_id, topic_title FROM " . TOPICS_TABLE . " WHERE topic_id = " . $topic_id)
         );
+        if (!$obj) {
+            throw new NotFound("The topic you selected does not exist.");
+        }
         $forum_id = $obj['forum_id'];
         $topic_title = $obj['topic_title'];
 

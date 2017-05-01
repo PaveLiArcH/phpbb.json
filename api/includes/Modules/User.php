@@ -41,7 +41,7 @@ class User extends Base
         }
         if ($result['status'] == LOGIN_SUCCESS) {
             $user_row = $result['user_row'];
-            return $response->withJson(['user_id' => $user_row['user_id']])->withHeader();
+            return $response->withJson(['user_id' => $user_row['user_id']]);
         } else {
             throw new \phpBBJson\Exception\Unauthorized("Login failed");
         }
