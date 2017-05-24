@@ -87,11 +87,29 @@ class User extends Base
      */
     public function info($request, $response, $args)
     {
+        define('PHPBB_USE_BOARD_URL_PATH', true);
+
         $user = $this->phpBB->get_user();
+        $phpbb_container = $this->phpBB->get_container();
         $user->session_begin();
         if ($user->data['user_id'] == ANONYMOUS) {
             throw new Unauthorized("Must be authorized");
         }
+
+        $phpbb_avatar_manager = $phpbb_container->get('avatar.manager');
+        $driver = $phpbb_avatar_manager->get_driver($user->data['user_avatar_type'], true);
+        if ($driver) {
+            $row = [
+                'avatar' => $user->data['user_avatar'],
+                'avatar_type' => $user->data['user_avatar_type'],
+                'avatar_width' => $user->data['user_avatar_width'],
+                'avatar_height' => $user->data['user_avatar_height'],
+            ];
+            $avatar_data = $driver->get_data($row);
+        } else {
+            $avatar_data['src'] = '';
+        }
+
         return $response->withJson(
             [
                 'user_id' => $user->data['user_id'],
@@ -105,6 +123,7 @@ class User extends Base
                 'user_avatar_width' => $user->data['user_avatar_width'],
                 'user_avatar_height' => $user->data['user_avatar_height'],
                 'user_from' => $user->data['user_from'],
+                'avatar' => $avatar_data,
             ]
         );
     }
